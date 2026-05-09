@@ -5,9 +5,6 @@ import { createServer } from 'http';
 import logger from './utils/logger';
 import apiRoutes from './api/routes';
 
-// Import worker to initialize it
-import './queues/worker';
-
 dotenv.config();
 
 const app = express();
