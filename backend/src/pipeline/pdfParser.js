@@ -28,20 +28,20 @@ async function parsePDF(filePath) {
   
   console.log(`📄 PDF text extracted! Total lines: ${lines.length}`);
 
-  // Relaxed heuristic: allow leading whitespace for robustness across different environments (e.g. Linux/Render)
-  const dateRegex = /^\s*(\d{2}[\/\-\s](?:\d{2}|[a-zA-Z]{3})[\/\-\s]\d{2,4})/;
+  // More robust regex: removed ^ anchor as some environments prepend hidden characters or spaces
+  const dateRegex = /(\d{2}[\/\-\s](?:\d{2}|[a-zA-Z]{3})[\/\-\s]\d{2,4})/;
   // Match all amounts on the line
-  const amountRegexAll = /([\d,]+\.\d{2})(?:\s*(Cr|Dr))?/gi;
+  const amountRegexAll = /([\d,]+\.\d{2})(?:\s*(Cr|Dr|CR|DR))?/g;
 
   let idCounter = 1;
   let previousBalance = null;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const line = lines[i];
     const dateMatch = line.match(dateRegex);
 
     if (dateMatch) {
-      const dateStr = dateMatch[1];
+      const dateStr = dateMatch[0].trim();
       const amounts = [...line.matchAll(amountRegexAll)];
       
       if (amounts.length === 0) continue;
@@ -118,7 +118,9 @@ async function parsePDF(filePath) {
   }
 
   if (transactions.length === 0) {
-    console.log("⚠️ No transactions matched! Here are the first 10 lines the parser saw:\n", lines.slice(0, 10).join('\n'));
+    console.log("⚠️ No transactions matched! Content Preview (First 500 chars):");
+    console.log(text.substring(0, 500));
+    console.log("Sample Lines:\n", lines.slice(0, 15).join('\n'));
   }
 
   return transactions;
