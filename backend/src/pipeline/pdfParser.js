@@ -28,8 +28,8 @@ async function parsePDF(filePath) {
   
   console.log(`📄 PDF text extracted! Total lines: ${lines.length}`);
 
-  // Relaxed heuristic: look for dates (DD/MM/YYYY, DD-MM-YYYY, or DD-MMM-YYYY)
-  const dateRegex = /^(\d{2}[\/\-\s](?:\d{2}|[a-zA-Z]{3})[\/\-\s]\d{2,4})/;
+  // Relaxed heuristic: allow leading whitespace for robustness across different environments (e.g. Linux/Render)
+  const dateRegex = /^\s*(\d{2}[\/\-\s](?:\d{2}|[a-zA-Z]{3})[\/\-\s]\d{2,4})/;
   // Match all amounts on the line
   const amountRegexAll = /([\d,]+\.\d{2})(?:\s*(Cr|Dr))?/gi;
 

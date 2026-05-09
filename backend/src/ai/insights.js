@@ -6,6 +6,8 @@ const openai = new OpenAI({
 });
 
 async function generateInsights(categorizedTransactions) {
+  console.log(`📊 Summary Calculation: Processing ${categorizedTransactions?.length || 0} transactions.`);
+
   // 1. Compute Deterministic Aggregates
   let totalIn = 0;
   let totalOut = 0;
@@ -37,7 +39,7 @@ async function generateInsights(categorizedTransactions) {
       insights = JSON.parse(response.choices[0].message.content).insights;
     } catch (error) {
       console.error("OpenAI Insight Error:", error);
-      insights = ["AI insights are currently unavailable due to a service error. You can still view your deterministic aggregates."];
+      throw error; // Fail explicitly
     }
   }
   return { summary, insights };

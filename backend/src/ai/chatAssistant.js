@@ -31,7 +31,7 @@ async function processChatQuery(query, transactions) {
     return response.choices[0].message.content;
   } catch (error) {
     console.error("OpenAI Chat Error:", error);
-    return "I'm sorry, but my AI brain is currently unreachable. Please try asking again later.";
+    throw error; // Fail explicitly
   }
 }
 
