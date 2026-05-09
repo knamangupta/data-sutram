@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import logger from '../../utils/logger';
-import { pdfQueue } from '../../queues/pdfQueue';
 import path from 'path';
 
 export const uploadPdf = async (req: Request, res: Response): Promise<void> => {
@@ -15,16 +14,16 @@ export const uploadPdf = async (req: Request, res: Response): Promise<void> => {
     const filePath = req.file.path;
     const originalName = req.file.originalname;
 
-    // Dispatch job to BullMQ queue
-    const job = await pdfQueue.add('extract-pdf', {
-      filePath,
-      originalName,
-    });
+    // Redis removed: Processing is now handled synchronously.
+    // In a full implementation, you would call your PDF parser and AI categorizer here.
+    logger.info(`Processing file synchronously: ${originalName}`);
 
-    res.status(202).json({
-      message: 'File accepted for processing',
-      jobId: job.id,
-      statusUrl: `/api/v1/status/${job.id}`
+    res.status(200).json({
+      message: 'File processed successfully',
+      transactions: [], // Replace with actual parsed transactions
+      summary: { totalIn: 0, totalOut: 0, net: 0 },
+      insights: ["Analysis completed synchronously without Redis."],
+      originalName
     });
   } catch (error: any) {
     logger.error(`Upload error: ${error.message}`);

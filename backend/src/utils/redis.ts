@@ -1,19 +1,4 @@
-import IORedis from 'ioredis';
-import dotenv from 'dotenv';
-import logger from '../utils/logger';
-
-dotenv.config();
-
-const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  maxRetriesPerRequest: null,
-});
-
-connection.on('error', (err) => {
-  logger.error(`Redis connection error: ${err.message}`);
-});
-
-connection.on('connect', () => {
-  logger.info('Successfully connected to Redis.');
-});
-
+// Redis and BullMQ have been removed for synchronous processing.
+// You should delete this file and remove any imports of 'connection' in your server files.
+const connection: any = null;
 export default connection;

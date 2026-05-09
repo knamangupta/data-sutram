@@ -2,6 +2,7 @@ const { OpenAI } = require('openai');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  timeout: 7000, // 7 seconds timeout
 });
 
 const CATEGORIES = ['Food', 'Travel', 'Utilities', 'Shopping', 'Salary', 'Transfer', 'Other'];
