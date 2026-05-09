@@ -7,8 +7,8 @@ import fs from 'fs';
 const { categorizeTransactions } = require('../../ai/categorizer');
 const { generateInsights } = require('../../ai/insights');
 
-// Note: You may need to import your specific PDF parsing utility here
-// e.g., import { parseStatement } from '../../utils/pdfParser';
+// Import the PDF Parser
+const { parsePDF } = require('../../pipeline/pdfParser');
 
 export const uploadPdf = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -21,10 +21,9 @@ export const uploadPdf = async (req: Request, res: Response): Promise<void> => {
     const originalName = req.file.originalname;
     logger.info(`Processing file: ${originalName}`);
 
-    // 1. EXTRACT: This is where you call your PDF text extraction logic.
-    // For now, I'm using a placeholder for the transactions array you were previously extracting.
-    // You should replace 'rawTransactions' with the result of your PDF parsing function.
-    const rawTransactions: any[] = []; 
+    // 1. EXTRACT: Call the parser to get transactions from the uploaded file
+    logger.info(`Starting extraction for: ${filePath}`);
+    const rawTransactions = await parsePDF(filePath);
     
     // 2. CATEGORIZE: Use your existing AI categorizer
     const categorizedTransactions = await categorizeTransactions(rawTransactions);

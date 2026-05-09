@@ -17,29 +17,29 @@ async function parsePDF(filePath) {
     });
     
     pdfParser.on("pdfParser_dataReady", () => {
-      // pdf2json raw text is often URL encoded, especially on Linux/Render
-      const rawText = pdfParser.getRawTextContent();
-      try {
-        resolve(decodeURIComponent(rawText));
-      } catch (e) {
-        console.warn("URI Decoding failed, using raw text.");
-        resolve(rawText);
-      }
+      const raw = pdfParser.getRawTextContent();
+      // Manually decode hex sequences (%XX) to avoid decodeURIComponent 
+      // throwing errors on literal '%' signs in transaction descriptions.
+      const decoded = raw.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+        return String.fromCharCode(parseInt(p1, 16));
+      });
+      resolve(decoded);
     });
     
     pdfParser.loadPDF(filePath);
   });
 
-  // Split by any newline variation or the encoded version of a newline
-  const lines = text.split(/\r?\n|%0A|%0D/);
+  // Normalize spaces and split by any newline variation
+  const normalizedText = text.replace(/[ \t\u00A0]+/g, ' ');
+  const lines = normalizedText.split(/\r?\n/);
   const transactions = [];
   
   console.log(`📄 PDF text extracted! Total lines: ${lines.length}`);
 
-  // More robust regex: removed ^ anchor as some environments prepend hidden characters or spaces
-  const dateRegex = /(\d{1,2}[\/\-\s](?:\d{1,2}|[a-zA-Z]{3}|[a-zA-Z]{4,9})[\/\-\s]\d{2,4})/;
+  // Flexible date regex: handles /, -, spaces, or dots
+  const dateRegex = /(\d{1,2}[\/\-\s\.](\d{1,2}|[a-zA-Z]{3,9})[\/\-\s\.]\d{2,4})/;
   // Match all amounts on the line
-  const amountRegexAll = /([\d,]+\.\d{2})(?:\s*(Cr|Dr|CR|DR))?/gi;
+  const amountRegexAll = /(?<!\d)([\d,]+\.\d{2})(?:\s*(Cr|Dr|CR|DR))?(?!\d)/gi;
 
   let idCounter = 1;
   let previousBalance = null;
@@ -50,12 +50,24 @@ async function parsePDF(filePath) {
 
     if (dateMatch) {
       const dateStr = dateMatch[0].trim();
-      const amounts = [...line.matchAll(amountRegexAll)];
+      let amounts = [...line.matchAll(amountRegexAll)];
+      let amountLineIndex = i;
       
       if (amounts.length === 0) {
-        // Log lines that have a date but no amounts to see what the parser is missing
-        console.log(`[Parser Debug] Date found but no amounts on line ${i}: "${line}"`);
-        continue;
+        // LOOKAHEAD: In some environments (Linux/Render), the amount might be on the NEXT line
+        if (i + 1 < lines.length) {
+          const nextLine = lines[i + 1].trim();
+          const nextAmounts = [...nextLine.matchAll(amountRegexAll)];
+          if (nextAmounts.length > 0) {
+            amounts = nextAmounts;
+            amountLineIndex = i + 1;
+          }
+        }
+        
+        if (amounts.length === 0) {
+          console.log(`[Parser Debug] No amounts found near date on line ${i}: "${line}"`);
+          continue;
+        }
       }
 
       let targetMatch;
@@ -87,7 +99,12 @@ async function parsePDF(filePath) {
         type = 'DEBIT'; // Default fallback
       }
 
-      let description = line.replace(dateRegex, '').replace(amountRegexAll, '').trim();
+      // Build description using the line containing the date and potentially the line containing the amount
+      let description = line.replace(dateRegex, '').trim();
+      if (amountLineIndex !== i) {
+        description += ' ' + lines[amountLineIndex].replace(amountRegexAll, '').trim();
+      }
+      description = description.replace(amountRegexAll, '').trim();
       
       // Clean up description removing leftover artifacts
       description = description.replace(/^[-\s]+/, '').replace(/[-\s]+$/, '');
@@ -95,7 +112,7 @@ async function parsePDF(filePath) {
       // Multi-line description heuristic:
       // If the description is empty or very short, grab text from the next few lines
       // until we hit another date or empty line.
-      let lookaheadIndex = i + 1;
+      let lookaheadIndex = Math.max(i, amountLineIndex) + 1;
       let extraDescription = [];
       while (lookaheadIndex < lines.length && lookaheadIndex < i + 4) {
         const nextLine = lines[lookaheadIndex].trim();

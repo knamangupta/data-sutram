@@ -30,8 +30,8 @@ async function processChatQuery(query, transactions) {
 
     return response.choices[0].message.content;
   } catch (error) {
-    console.error("OpenAI Chat Error:", error);
-    throw error; // Fail explicitly
+    console.warn("OpenAI Chat Error, skipping AI step:", error.message);
+    return "I'm sorry, I'm having trouble connecting to my AI service right now. Please verify your configuration.";
   }
 }
 

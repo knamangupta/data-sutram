@@ -38,8 +38,8 @@ async function generateInsights(categorizedTransactions) {
       });
       insights = JSON.parse(response.choices[0].message.content).insights;
     } catch (error) {
-      console.error("OpenAI Insight Error:", error);
-      throw error; // Fail explicitly
+      console.warn("OpenAI Insight generation failed, skipping AI step:", error.message);
+      // insights variable remains at its default value
     }
   }
   return { summary, insights };

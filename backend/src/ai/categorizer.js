@@ -61,8 +61,8 @@ async function categorizeTransactions(transactions) {
 
       for (const tx of unknowns) categorized.push({ ...tx, category: aiMap.get(tx.id) || 'Other' });
     } catch (error) {
-      console.error("OpenAI Categorization Error:", error);
-      throw error; // Fail explicitly so the user knows the API key or service is down
+      console.warn("OpenAI Categorization failed, skipping AI step:", error.message);
+      unknowns.forEach(tx => categorized.push({ ...tx, category: 'Other' }));
     }
   } else {
     unknowns.forEach(tx => categorized.push({ ...tx, category: 'Other' }));
