@@ -17,27 +17,35 @@ async function parsePDF(filePath) {
     });
     
     pdfParser.on("pdfParser_dataReady", () => {
-      resolve(pdfParser.getRawTextContent());
+      // pdf2json raw text is often URL encoded, especially on Linux/Render
+      const rawText = pdfParser.getRawTextContent();
+      try {
+        resolve(decodeURIComponent(rawText));
+      } catch (e) {
+        console.warn("URI Decoding failed, using raw text.");
+        resolve(rawText);
+      }
     });
     
     pdfParser.loadPDF(filePath);
   });
 
-  const lines = text.split(/\r?\n/);
+  // Split by any newline variation or the encoded version of a newline
+  const lines = text.split(/\r?\n|%0A|%0D/);
   const transactions = [];
   
   console.log(`📄 PDF text extracted! Total lines: ${lines.length}`);
 
   // More robust regex: removed ^ anchor as some environments prepend hidden characters or spaces
-  const dateRegex = /(\d{2}[\/\-\s](?:\d{2}|[a-zA-Z]{3})[\/\-\s]\d{2,4})/;
+  const dateRegex = /(\d{1,2}[\/\-\s](?:\d{1,2}|[a-zA-Z]{3}|[a-zA-Z]{4,9})[\/\-\s]\d{2,4})/;
   // Match all amounts on the line
-  const amountRegexAll = /([\d,]+\.\d{2})(?:\s*(Cr|Dr|CR|DR))?/g;
+  const amountRegexAll = /([\d,]+\.\d{2})(?:\s*(Cr|Dr|CR|DR))?/gi;
 
   let idCounter = 1;
   let previousBalance = null;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i].trim();
     const dateMatch = line.match(dateRegex);
 
     if (dateMatch) {
