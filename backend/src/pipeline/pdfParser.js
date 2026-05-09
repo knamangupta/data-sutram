@@ -44,7 +44,11 @@ async function parsePDF(filePath) {
       const dateStr = dateMatch[0].trim();
       const amounts = [...line.matchAll(amountRegexAll)];
       
-      if (amounts.length === 0) continue;
+      if (amounts.length === 0) {
+        // Log lines that have a date but no amounts to see what the parser is missing
+        console.log(`[Parser Debug] Date found but no amounts on line ${i}: "${line}"`);
+        continue;
+      }
 
       let targetMatch;
       let currentBalance = null;
@@ -118,8 +122,9 @@ async function parsePDF(filePath) {
   }
 
   if (transactions.length === 0) {
-    console.log("⚠️ No transactions matched! Content Preview (First 500 chars):");
-    console.log(text.substring(0, 500));
+    console.log("⚠️ No transactions matched! Raw Text Inspection:");
+    // JSON.stringify helps see hidden characters like \r or \t
+    console.log(JSON.stringify(text.substring(0, 1000))); 
     console.log("Sample Lines:\n", lines.slice(0, 15).join('\n'));
   }
 
