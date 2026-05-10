@@ -8,11 +8,13 @@ import {
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
+// Using a single source of truth for the API URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001/api/v1';
 
 const uploadStatement = async (file: File) => {
   const formData = new FormData();
-  formData.append('statement', file);
+  formData.append('file', file);
+
   const response = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', body: formData });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
