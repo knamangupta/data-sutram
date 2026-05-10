@@ -82,7 +82,7 @@ FinSight is a high-fidelity bank statement analyzer specifically designed for th
 
 ## 📝 Engineering Report
 
-For a detailed breakdown of the "Agentic Engineering" decisions, security implementations, and scalability considerations, please refer to the REPORT.md file.
+For a detailed breakdown of the "Agentic Engineering" decisions, security implementations, and scalability considerations, please refer to the following document: https://docs.google.com/document/d/13rdHxkr74NZg6alKrcQl7I84f64l9c1w1lRVAYcvm9c/edit?usp=sharing
 
 ## ⚖️ License
 
