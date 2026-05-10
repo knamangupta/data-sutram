@@ -1,4 +1,5 @@
-// Redis and BullMQ have been removed for synchronous processing.
-// You should delete this file and remove any imports of 'connection' in your server files.
+// Since, this is an MVP, queue has not been used.
+// We should put the PDF parsing logic behind a queue to unblock our core process.
+
 const connection: any = null;
 export default connection;
